@@ -69,3 +69,35 @@ def contact(message):
     bot.send_message(message.chat.id, "Напишите сюда: @buyer_Tramp")
 
 bot.polling()
+ADMIN_ID = 241126912
+@bot.message_handler(func=lambda message: message.from_user.id == ADMIN_ID)
+def admin_update_status(message):
+    if message.text.startswith("/status"):
+        # Формат команды: /status номер_заказа новый_статус
+        try:
+            parts = message.text.split(maxsplit=2)
+            order_num = int(parts[1])
+            new_status = parts[2]
+            if order_num in orders:
+                orders[order_num]["status"] = new_status
+                bot.send_message(message.chat.id, f"Статус заказа №{order_num} обновлён на: {new_status}")
+            else:
+                bot.send_message(message.chat.id, f"Заказ №{order_num} не найден")
+        except:
+            bot.send_message(message.chat.id, "Ошибка формата. Используй: /status номер_заказа новый_статус")
+
+# ====== Пример изменения существующего хэндлера проверки статуса ======
+@bot.message_handler(func=lambda message: message.text == "📦 Проверить статус")
+def check_status(message):
+    msg = bot.send_message(message.chat.id, "Введите номер заказа")
+    bot.register_next_step_handler(msg, show_status)
+
+def show_status(message):
+    try:
+        order_num = int(message.text)
+        if order_num in orders:
+            bot.send_message(message.chat.id, f"Статус заказа №{order_num}: {orders[order_num]['status']}")
+        else:
+            bot.send_message(message.chat.id, f"Заказ №{order_num} не найден")
+    except:
+        bot.send_message(message.chat.id, "Ошибка. Введите номер заказа цифрами")
